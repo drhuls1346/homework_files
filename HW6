@@ -1,0 +1,30 @@
+# Daniel Hulsey
+# Chapter 7
+# Challenge 1
+# Write a script that creates a 15,000-meter buffer around features in the
+# airports.shp feature class classified as an airport ( based on the FEATURE
+# field ) and a 7,500-meter buffer around features classified as a seaplane
+# base. The results should be two separate feature classes, one for each
+# airport type.
+
+import arcpy
+from arcpy import env
+env.workspace = "F:/Python/Python/Data/Exercise07"
+fc = "airports.shp"
+airports = arcpy.CreateUniqueName("Results/airport_buffer.shp")
+seaplane_base = arcpy.CreateUniqueName("Results/seaplane_base_buffer.shp")
+arcpy.Buffer_analysis(fc, airports, "15000 METERS")
+arcpy.Buffer_analysis(fc, seaplane_base, "7500 METERS")
+
+# Challenge 2
+# Write a script that adds a text field to the roads.shp feature class called
+# FERRY and populates this field with YES and NO values, depending on
+# the value of the FEATURE field.
+
+import arcpy
+from arcpy import env
+env.workspace = "F:/Python/Python/Data/Exercise07"
+fc = "Results/roads.shp"
+newfield = "FERRY"
+fieldtype = "TEXT"
+fieldname = arcpy.ValidateFieldName(newfield)
