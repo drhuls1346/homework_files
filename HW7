@@ -1,0 +1,71 @@
+# Daniel Hulsey
+# 7/22/2014
+# Chapter 8 Challenges
+
+# Challenge 1
+# Write a script that creates a new polygon feature class containing a
+# single ( square ) polygon with the following coordinates: ( 0, 0 ), ( 0, 1,000 ),
+# ( 1,000, 0 ), and ( 1,000, 1,000 ).
+
+import arcpy
+import fileinput
+import string
+import os
+from arcpy import env
+env.workspace = "F:/Python/Python/Data/Exercise08"
+env.overwriteOutput = True
+outpath = "F:/Python/Python/Data/Exercise08"
+newfc = "Results/newpolygon.shp"
+arcpy.CreateFeatureclass_management(outpath, newfc, "Polygon")
+cursor = arcpy.da.InsertCursor(newfc, ["SHAPE@"])
+rectangle = [arcpy.Point(0, 0), arcpy.Point(0, 1,000), arcpy.Point(1,000, 0), arcpy.Point(1,000, 1,000)]
+cursor.insertRow([arcpy.Polygon(rectangle)])
+del cursor
+
+
+##Challenge 2
+##Write a script that determines the perimeter ( in meters ) and area ( in
+##square meters ) of each of the individual islands of the Hawaii.shp feature
+##class. Recall that this is a multipart feature class.
+
+import arcpy
+from arcpy import env
+env.workspace = "F:/Python/Python/Data/Exercise08"
+fc = "Hawaii.shp"
+cursor = arcpy.da.SearchCursor(fc, ["OID@", "SHAPE@"])
+for row in cursor:
+    partnum = 0
+    for part in row[1]:
+        print("Part {0}: ".format(partnum))
+        print("Area: {}".format(part.area()))
+        partnum += 1
+
+##Challenge 3
+##Write a script that creates an envelope polygon feature class for the
+##Hawaii.shp feature class. There is actually a tool that accomplishes this
+##called Minimum Bounding Geometry. You can look at the tool to get
+##some ideas, but your script needs to work directly with the geometry
+##properties.
+
+import arcpy
+from arcpy import env
+env.workspace = "F:/Python/Python/Data/Exercise08"
+fc = "Hawaii.shp"
+
+##Chapter 10 Challenge
+
+##Challenge 1
+##In ArcGIS Desktop Help, research the AddLayer function of the ArcPy
+##mapping module and use it to write a script that adds the parks layer
+##from the Parks data frame in Austin_TX.mxd to the other two data
+##frames in the same map document.
+
+import arcpy
+mxd = arcpy.mapping.MapDocument("F:/Python/Python/Data/Exercise10/Austin_TX.mxd")
+mapdoc = arcpy.mapping.MapDocument(mxd)
+df = arcpy.mapping.ListDataFrames(mxd)
+addLayer = arcpy.mapping.Layer("F:/Python/Python/Data/Exercise10/Austin/parks.lyr")
+for DataFrame in df:
+    arcpy.mapping.AddLayer(DataFrame, addLayer, "BOTTOM")
+mapdoc.save()
+del mapdoc
