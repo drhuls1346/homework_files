@@ -8,18 +8,18 @@
 # ( 1,000, 0 ), and ( 1,000, 1,000 ).
 
 import arcpy
-import fileinput
-import string
-import os
 from arcpy import env
 env.workspace = "F:/Python/Python/Data/Exercise08"
-env.overwriteOutput = True
-outpath = "F:/Python/Python/Data/Exercise08"
-newfc = "Results/newpolygon.shp"
-arcpy.CreateFeatureclass_management(outpath, newfc, "Polygon")
-cursor = arcpy.da.InsertCursor(newfc, ["SHAPE@"])
-rectangle = [arcpy.Point(0, 0), arcpy.Point(0, 1,000), arcpy.Point(1,000, 0), arcpy.Point(1,000, 1,000)]
-cursor.insertRow([arcpy.Polygon(rectangle)])
+fc = "newpoly2.shp"
+arcpy.CreateFeatureclass_management("F:/Python/Python/Data/Exercise08", fc, "Polygon")
+cursor = arcpy.da.InsertCursor(fc, ["SHAPE@"])
+array = arcpy.Array()
+coordlist =[[0, 0], [0, 1000], [1000, 1000], [1000, 0]]
+for x, y in coordlist:
+    point = arcpy.Point(x,y)
+    array.append(point)
+polygon = arcpy.Polygon(array)
+cursor.insertRow([polygon])
 del cursor
 
 
@@ -32,13 +32,14 @@ import arcpy
 from arcpy import env
 env.workspace = "F:/Python/Python/Data/Exercise08"
 fc = "Hawaii.shp"
-cursor = arcpy.da.SearchCursor(fc, ["OID@", "SHAPE@"])
+newfc = "Results/Hawaii_single.shp"
+arcpy.MultipartToSinglepart_management(fc, newfc)
+spatialref = arcpy.Describe(newfc).spatialReference
+unit = spatialref.linearUnitName
+cursor = arcpy.da.SearchCursor(newfc, ["SHAPE@"])
 for row in cursor:
-    partnum = 0
-    for part in row[1]:
-        print("Part {0}: ".format(partnum))
-        print("Area: {}".format(part.area()))
-        partnum += 1
+    print ("{0} square {1}".format(row[0].area, unit))
+
 
 ##Challenge 3
 ##Write a script that creates an envelope polygon feature class for the
@@ -51,6 +52,21 @@ import arcpy
 from arcpy import env
 env.workspace = "F:/Python/Python/Data/Exercise08"
 fc = "Hawaii.shp"
+newfc = "envelope8.shp"
+desc = arcpy.Describe(fc)
+spatialref = desc.spatialReference
+extent = desc.extent
+arcpy.CreateFeatureclass_management("C:/EsriPress/Python/Data/
+Exercise08", newfc, "Polygon", "", "", "", spatialref)
+cursor = arcpy.da.InsertCursor(newfc, ["SHAPE@"])
+array = arcpy.Array()
+array.append(extent.upperLeft)
+array.append(extent.upperRight)
+array.append(extent.lowerRight)
+array.append(extent.lowerLeft)
+polygon = arcpy.Polygon(array)
+cursor.insertRow([polygon])
+del cursor
 
 ##Chapter 10 Challenge
 
@@ -61,11 +77,14 @@ fc = "Hawaii.shp"
 ##frames in the same map document.
 
 import arcpy
+from arcpy import env
+env.workspace = "F:/Python/Python/Data/Exercise08"
 mxd = arcpy.mapping.MapDocument("F:/Python/Python/Data/Exercise10/Austin_TX.mxd")
-mapdoc = arcpy.mapping.MapDocument(mxd)
-df = arcpy.mapping.ListDataFrames(mxd)
-addLayer = arcpy.mapping.Layer("F:/Python/Python/Data/Exercise10/Austin/parks.lyr")
-for DataFrame in df:
-    arcpy.mapping.AddLayer(DataFrame, addLayer, "BOTTOM")
-mapdoc.save()
-del mapdoc
+df = arcpy.mapping.ListDataFrames(mxd, "Parks")[0]
+lyr = arcpy.mapping.ListLayers(mxd, "parks", df)[0]
+dflist = arcpy.mapping.ListDataFrames(mxd)
+for dframe in dflist:
+    if dframe.name <> "Parks":
+        arcpy.mapping.AddLayer(dframe, lyr)
+mxd.save()
+del mxd
